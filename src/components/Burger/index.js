@@ -1,8 +1,8 @@
 import React from 'react'
-import classes from './Burger.module.css';
-import BurgerIngredient from './BurgerIngredient';
+import classes from './Burger.module.css'
+import BurgerIngredient from './BurgerIngredient'
 
-const burger = ({ ingredients }) => {
+const Burger = ({ ingredients }) => {
     let transformedIngredients = Object.keys(ingredients).map(igKey => (
         [...Array(ingredients[igKey])].map((_, index) => (
             <BurgerIngredient type={igKey} key={`${igKey}${index}`} />
@@ -22,4 +22,4 @@ const burger = ({ ingredients }) => {
     )
 }
 
-export default burger
+export default Burger

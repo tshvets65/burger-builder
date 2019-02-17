@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import Burger from '../../components/Burger'
 import BuildControls from '../../components/Burger/BuildControls'
+import Modal from '../../components/UI/Modal'
+import OrderSummary from '../../components/Burger/OrderSummary'
 
 const INGREDIENT_PRICES = {
     salad: 0.5,
@@ -17,7 +19,8 @@ class BurgerBuilder extends Component {
             meat: 0
         },
         totalPrice: 4,
-        purchasable: false
+        purchasable: false,
+        purchasing: false
     }
 
     updatePurchaseState = () => {
@@ -48,14 +51,34 @@ class BurgerBuilder extends Component {
         }, this.updatePurchaseState)
     }
 
+    purchaseHandler = () => {
+        this.setState({ purchasing: true })
+    }
+
+    purchaseCancelHandler = () => {
+        this.setState({ purchasing: false })
+    }
+
+    purchaseContinueHandler = () => {
+        console.log('continue')
+    }
+
     render() {
-        const { ingredients, totalPrice, purchasable } = this.state
+        const { ingredients, totalPrice, purchasable, purchasing } = this.state
         const disabledInfo = { ...ingredients }
         for (let key in disabledInfo) {
             disabledInfo[key] = disabledInfo[key] <= 0
         }
         return (
             <>
+                <Modal show={purchasing} modalClosed={this.purchaseCancelHandler}>
+                    <OrderSummary
+                        ingredients={ingredients}
+                        purchaseCancelled={this.purchaseCancelHandler}
+                        purchaseContinued={this.purchaseContinueHandler}
+                        price={totalPrice}
+                    />
+                </Modal>
                 <Burger ingredients={ingredients} />
                 <BuildControls
                     ingredientAdded={this.addIngredientHandler}
@@ -63,6 +86,7 @@ class BurgerBuilder extends Component {
                     disabledInfo={disabledInfo}
                     price={totalPrice}
                     purchasable={purchasable}
+                    ordered={this.purchaseHandler}
                 />
             </>
         )
