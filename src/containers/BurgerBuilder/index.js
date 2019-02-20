@@ -6,25 +6,17 @@ import Modal from '../../components/UI/Modal'
 import OrderSummary from '../../components/Burger/OrderSummary'
 import Spinner from '../../components/UI/Spinner'
 import withErrorHandler from '../../hoc/withErrorHandler'
+import * as burgerBuilderActions from '../../store/actions/burgerBuilder'
 import axios from '../../axios-orders'
-import * as actionTypes from '../../store/actions'
 
 
 class BurgerBuilder extends Component {
     state = {
-        purchasing: false,
-        loading: false,
-        error: false
+        purchasing: false
     }
 
     componentDidMount() {
-        axios.get(`${process.env.REACT_APP_FIREBASEDB_URL}/ingredients.json`)
-            .then(response => {
-                this.setState({ ingredients: response.data })
-            })
-            .catch(error => {
-                this.setState({ error: true })
-            })
+        this.props.onInitIngredients()
     }
 
     updatePurchaseState = ingredients => {
@@ -49,28 +41,33 @@ class BurgerBuilder extends Component {
     }
 
     render() {
-        const { purchasing, loading, error } = this.state
-        const { totalPrice, ingredients, onIngredientAdded, onIngredientRemoved } = this.props
-        if (!ingredients) {
-            return error ? <p>Ingredients can't be loaded.</p> : <Spinner />
+        const { purchasing } = this.state
+        const { totalPrice, ingredients, onIngredientAdded, onIngredientRemoved, error } = this.props
+
+        if (error) {
+            return <p>Ingredients can't be loaded.</p>
         }
+
+        if (!ingredients) {
+            return <Spinner />
+        }
+
         const disabledInfo = { ...ingredients }
         for (let key in disabledInfo) {
             disabledInfo[key] = disabledInfo[key] <= 0
         }
+
         return (
             <>
                 <Modal show={purchasing} modalClosed={this.purchaseCancelHandler}>
-                    {loading ?
-                        <Spinner />
-                        :
-                        <OrderSummary
-                            ingredients={ingredients}
-                            purchaseCancelled={this.purchaseCancelHandler}
-                            purchaseContinued={this.purchaseContinueHandler}
-                            price={totalPrice}
-                        />
-                    }
+
+                    <OrderSummary
+                        ingredients={ingredients}
+                        purchaseCancelled={this.purchaseCancelHandler}
+                        purchaseContinued={this.purchaseContinueHandler}
+                        price={totalPrice}
+                    />
+
                 </Modal>
                 <Burger ingredients={ingredients} />
                 <BuildControls
@@ -89,14 +86,16 @@ class BurgerBuilder extends Component {
 const mapStateToProps = state => {
     return {
         ingredients: state.ingredients,
-        totalPrice: state.totalPrice
+        totalPrice: state.totalPrice,
+        error: state.error
     }
 }
 
 const mapDispatchToProps = dispatch => {
     return {
-        onIngredientAdded: ingName => dispatch({ type: actionTypes.ADD_INGREDIENT, ingredientName: ingName }),
-        onIngredientRemoved: ingName => dispatch({ type: actionTypes.REMOVE_INGREDIENT, ingredientName: ingName })
+        onIngredientAdded: name => dispatch(burgerBuilderActions.addIngredient(name)),
+        onIngredientRemoved: name => dispatch(burgerBuilderActions.removeIngredient(name)),
+        onInitIngredients: name => dispatch(burgerBuilderActions.initIngredients())
     }
 }
 
