@@ -5,7 +5,8 @@ import Spinner from '../../../components/UI/Spinner'
 import classes from './ContactData.module.css'
 import axios from '../../../axios-orders'
 import Input from '../../../components/UI/Input'
-
+import withErrorHandler from '../../../hoc/withErrorHandler'
+import * as orderActions from '../../../store/actions/order'
 
 class ContactData extends Component {
     state = {
@@ -31,7 +32,8 @@ class ContactData extends Component {
                 },
                 value: '',
                 validation: {
-                    required: true
+                    required: true,
+                    isEmail: true
                 },
                 valid: false,
                 touched: false
@@ -85,7 +87,8 @@ class ContactData extends Component {
                 validation: {
                     required: true,
                     minLength: 5,
-                    maxLength: 5
+                    maxLength: 5,
+                    isNumeric: true
                 },
                 valid: false,
                 touched: false
@@ -104,13 +107,11 @@ class ContactData extends Component {
                 touched: false
             }
         },
-        formIsValid: false,
-        loading: false
+        formIsValid: false
     }
 
     orderHandler = event => {
         event.preventDefault()
-        this.setState({ loading: true })
         const orderData = {}
         for (let key in this.state.orderForm) {
             orderData[key] = this.state.orderForm[key].value
@@ -120,13 +121,8 @@ class ContactData extends Component {
             price: this.props.price,
             orderData
         }
-        axios.post('/orders.json', order)
-            .then(response => {
-                this.setState({ loading: false }, () => this.props.history.push('/'))
-            })
-            .catch(error => {
-                this.setState({ loading: false })
-            })
+        console.log(order)
+        this.props.onOrderBurger(order)
     }
 
     inputChangedHandler = (event, inputId) => {
@@ -154,11 +150,21 @@ class ContactData extends Component {
         if (rules.maxLength) {
             isValid = isValid && value.trim().length <= rules.maxLength
         }
+        if (rules.isEmail) {
+            const pattern = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
+            isValid = isValid && pattern.test(value)
+        }
+        if (rules.isNumeric) {
+            const pattern = /^\d+$/;
+            isValid = isValid && pattern.test(value)
+        }
         return isValid
     }
 
     render() {
-        const { loading, orderForm, formIsValid } = this.state
+        const { orderForm, formIsValid } = this.state
+        const { loading } = this.props
+
         if (loading) {
             return <Spinner />
         }
@@ -189,9 +195,16 @@ class ContactData extends Component {
 
 const mapStateToProps = state => {
     return {
-        ingredients: state.ingredients,
-        price: state.totalPrice
+        ingredients: state.burgerBuilder.ingredients,
+        price: state.burgerBuilder.totalPrice,
+        loading: state.order.loading
     }
 }
 
-export default connect(mapStateToProps)(ContactData)
+const mapDispatchToProps = dispatch => {
+    return {
+        onOrderBurger: orderData => dispatch(orderActions.purchaseBurger(orderData))
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(ContactData, axios))
