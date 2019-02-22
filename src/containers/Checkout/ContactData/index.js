@@ -121,8 +121,7 @@ class ContactData extends Component {
             price: this.props.price,
             orderData
         }
-        console.log(order)
-        this.props.onOrderBurger(order)
+        this.props.onOrderBurger(order, this.props.token)
     }
 
     inputChangedHandler = (event, inputId) => {
@@ -180,7 +179,7 @@ class ContactData extends Component {
                             elementType={orderForm[key].elementType}
                             elementConfig={{ ...orderForm[key].elementConfig, name: key }}
                             value={orderForm[key].value}
-                            invalid={!orderForm[key].valie}
+                            invalid={!orderForm[key].valid}
                             touched={orderForm[key].touched}
                             changed={event => this.inputChangedHandler(event, key)}
                         />
@@ -197,13 +196,14 @@ const mapStateToProps = state => {
     return {
         ingredients: state.burgerBuilder.ingredients,
         price: state.burgerBuilder.totalPrice,
-        loading: state.order.loading
+        loading: state.order.loading,
+        token: state.auth.token
     }
 }
 
 const mapDispatchToProps = dispatch => {
     return {
-        onOrderBurger: orderData => dispatch(orderActions.purchaseBurger(orderData))
+        onOrderBurger: (orderData, token) => dispatch(orderActions.purchaseBurger(orderData, token))
     }
 }
 
