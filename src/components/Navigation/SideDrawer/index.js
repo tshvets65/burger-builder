@@ -9,7 +9,7 @@ const SideDrawer = ({ open, closed }) => {
     return (
         <>
             <Backdrop show={open} clicked={closed} />
-            <div className={attachedClasses}>
+            <div className={attachedClasses} onClick={closed}>
                 <div className={classes.logo}><Logo /></div>
                 <nav>
                     <NavigationItems />

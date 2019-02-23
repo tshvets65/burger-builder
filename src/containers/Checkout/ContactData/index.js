@@ -7,6 +7,7 @@ import axios from '../../../axios-orders'
 import Input from '../../../components/UI/Input'
 import withErrorHandler from '../../../hoc/withErrorHandler'
 import * as orderActions from '../../../store/actions/order'
+import { checkValidity } from '../../../shared/utility'
 
 class ContactData extends Component {
     state = {
@@ -112,23 +113,28 @@ class ContactData extends Component {
 
     orderHandler = event => {
         event.preventDefault()
+
+        const { userId, token, ingredients, price } = this.props
+
         const orderData = {}
         for (let key in this.state.orderForm) {
             orderData[key] = this.state.orderForm[key].value
         }
+
         const order = {
-            ingredients: this.props.ingredients,
-            price: this.props.price,
-            orderData
+            ingredients,
+            price,
+            orderData,
+            userId
         }
-        this.props.onOrderBurger(order, this.props.token)
+        this.props.onOrderBurger(order, token)
     }
 
     inputChangedHandler = (event, inputId) => {
         const updatedOrderForm = { ...this.state.orderForm }
         const updatedFormElement = { ...updatedOrderForm[inputId] }
         updatedFormElement.value = event.target.value
-        updatedFormElement.valid = this.checkValidity(updatedFormElement.value, updatedFormElement.validation)
+        updatedFormElement.valid = checkValidity(updatedFormElement.value, updatedFormElement.validation)
         updatedFormElement.touched = true
         updatedOrderForm[inputId] = updatedFormElement
         let formIsValid = true
@@ -136,28 +142,6 @@ class ContactData extends Component {
             formIsValid = formIsValid && updatedOrderForm[key].valid
         }
         this.setState({ orderForm: updatedOrderForm, formIsValid })
-    }
-
-    checkValidity = (value, rules) => {
-        let isValid = true
-        if (rules.required) {
-            isValid = isValid && value.trim() !== ''
-        }
-        if (rules.minLength) {
-            isValid = isValid && value.trim().length >= rules.minLength
-        }
-        if (rules.maxLength) {
-            isValid = isValid && value.trim().length <= rules.maxLength
-        }
-        if (rules.isEmail) {
-            const pattern = /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/;
-            isValid = isValid && pattern.test(value)
-        }
-        if (rules.isNumeric) {
-            const pattern = /^\d+$/;
-            isValid = isValid && pattern.test(value)
-        }
-        return isValid
     }
 
     render() {
@@ -197,7 +181,8 @@ const mapStateToProps = state => {
         ingredients: state.burgerBuilder.ingredients,
         price: state.burgerBuilder.totalPrice,
         loading: state.order.loading,
-        token: state.auth.token
+        token: state.auth.token,
+        userId: state.auth.userId
     }
 }
 
