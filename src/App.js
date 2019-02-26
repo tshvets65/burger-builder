@@ -1,50 +1,42 @@
-import React, { Component } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { Route, Switch, withRouter } from 'react-router-dom'
 import { connect } from 'react-redux'
 import Layout from './hoc/Layout';
 import BurgerBuilder from './containers/BurgerBuilder';
 import Logout from './containers/Auth/Logout'
 import * as actions from './store/actions/auth'
-import asyncComponent from './hoc/asyncComponent'
 
-const asyncCheckout = asyncComponent(() => {
-  return import('./containers/Checkout')
-})
+const Checkout = lazy(() => import('./containers/Checkout'))
 
-const asyncOrders = asyncComponent(() => {
-  return import('./containers/Orders')
-})
+const Orders = lazy(() => import('./containers/Orders'))
 
-const asyncAuth = asyncComponent(() => {
-  return import('./containers/Auth')
-})
+const Auth = lazy(() => import('./containers/Auth'))
 
-class App extends Component {
-  componentDidMount() {
-    this.props.onTryAutoSignup()
-  }
+const App = ({ onTryAutoSignup, isAuth }) => {
+  useEffect(() => {
+    onTryAutoSignup()
+  }, [])
 
-  render() {
-    const { isAuth } = this.props
-    return (
-      <Layout>
+  return (
+    <Layout>
+      <Suspense fallback={<p>Loading...</p>}>
         {isAuth ? (
           <Switch>
-            <Route path='/checkout' component={asyncCheckout} />
-            <Route path='/orders' component={asyncOrders} />
+            <Route path='/checkout' render={props => <Checkout {...props} />} />
+            <Route path='/orders' render={props => <Orders {...props} />} />
             <Route path='/logout' component={Logout} />
-            <Route path='/auth' component={asyncAuth} />
+            <Route path='/auth' render={props => <Auth  {...props} />} />
             <Route path='/' component={BurgerBuilder} />
           </Switch>
         ) : (
             <Switch>
-              <Route path='/auth' component={asyncAuth} />
+              <Route path='/auth' render={props => <Auth {...props} />} />
               <Route path='/' component={BurgerBuilder} />
             </Switch>
           )}
-      </Layout>
-    );
-  }
+      </Suspense>
+    </Layout>
+  )
 }
 
 const mapStateToProps = state => {
